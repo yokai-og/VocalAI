@@ -1,37 +1,76 @@
-# VocalAI — AI-Powered Speech Transcription
+# VocalAI 🎙️
+### AI-Powered Speech Transcription
 
-VocalAI is a web-based speech-to-text application that converts uploaded audio recordings and live microphone speech into text. It combines Python speech-recognition technologies with a modern, responsive interface.
+VocalAI is a web-based speech transcription application that converts spoken audio into text using Google Web Speech recognition and OpenAI Whisper. It supports both audio file uploads and real-time microphone transcription through a simple, modern interface.
 
-The application supports Google Web Speech and locally hosted OpenAI Whisper through a FastAPI backend.
+## 🌐 Live Demo
 
-## Features
+- **Frontend:** https://vocalai-one.vercel.app/
+- **Backend API:** https://vocalai-api.onrender.com/
+- **API Documentation:** https://vocalai-api.onrender.com/docs
+- **Backend Health Check:** https://vocalai-api.onrender.com/health
 
-- **Audio transcription:** Upload WAV, MP3, M4A, OGG, FLAC, or WEBM files.
-- **Live transcription:** Transcribe microphone speech in near real time using WebSockets.
-- **Multiple transcription engines:**
-  - Google Web Speech through Python's `SpeechRecognition` library.
-  - OpenAI Whisper through `faster-whisper` running on the server.
-- **Automatic fallback:** The backend can fall back to Whisper when Google transcription fails.
-- **Transcription controls:** Copy text, download `.txt` files, and view timestamps.
-- **Live controls:** Language selection, audio-level meter, and session timer.
-- **Modern interface:** Dark navy theme with violet and cyan accents.
+## ✨ Features
 
-## Technology Stack
+- **Audio File Transcription:** Upload audio files and convert speech into text.
+- **Live Transcription:** Transcribe speech directly through your microphone.
+- **Multiple Speech Engines:** Supports Google Web Speech and Whisper.
+- **Whisper Integration:** Uses the faster-whisper implementation for speech recognition.
+- **Real-Time Processing:** Supports live audio streaming through WebSockets.
+- **Transcription Results:** View and copy generated transcripts.
+- **Responsive Interface:** Clean, modern interface designed for ease of use.
+- **Audio Validation:** Configurable upload size and audio duration limits.
 
-| Component | Technologies |
-|---|---|
-| Frontend | HTML, CSS, JavaScript |
-| Backend | Python, FastAPI |
-| Speech Recognition | SpeechRecognition, Google Web Speech |
-| AI Transcription | OpenAI Whisper, faster-whisper |
-| Audio Processing | PyAV, PCM AudioWorklet |
-| Communication | REST API, WebSockets |
-| Deployment | Render, Vercel |
+## 🛠️ Technology Stack
 
-## Architecture
+### Frontend
+- HTML5
+- CSS3
+- JavaScript
+- Web Audio API
+- AudioWorklet
+
+### Backend
+- Python
+- FastAPI
+- Uvicorn
+- WebSockets
+- SpeechRecognition
+- faster-whisper
+- PyAV
+
+### Deployment
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Version Control:** Git and GitHub
+
+## 🏗️ Project Architecture
+
+VocalAI uses a separate frontend and backend architecture.
+
+1. The frontend provides the interface for uploading audio or recording through a microphone.
+2. Audio data is sent to the FastAPI backend.
+3. The backend processes the audio using the selected transcription engine.
+4. The generated transcript is returned to the frontend.
+5. For live transcription, audio is streamed using WebSockets.
+
+## 📁 Project Structure
 
 ```text
 VocalAI/
+│
+├── backend/
+│   ├── app.py
+│   ├── transcriber.py
+│   ├── streaming.py
+│   ├── benchmark.py
+│   ├── cli.py
+│   ├── prefetch_model.py
+│   ├── connections.py
+│   ├── database.py
+│   ├── schema.py
+│   ├── requirements.txt
+│   └── .env.example
 │
 ├── frontend/
 │   ├── index.html
@@ -40,150 +79,113 @@ VocalAI/
 │   ├── config.js
 │   └── pcm-worklet.js
 │
-├── backend/
-│   ├── app.py
-│   ├── transcriber.py
-│   ├── streaming.py
-│   ├── connections.py
-│   ├── database.py
-│   ├── schema.py
-│   ├── cli.py
-│   ├── benchmark.py
-│   ├── prefetch_model.py
-│   └── requirements.txt
-│
 ├── samples/
+├── LICENSE
 ├── README.md
-├── PROJECT_PHASES.md
-└── render.yaml
+├── render.yaml
+└── .gitignore
 ```
 
-### Audio Processing Workflow
+## ⚙️ Run Locally
 
-**Uploaded audio**
-
-1. The user uploads an audio file through the frontend.
-2. The frontend sends it to the FastAPI backend.
-3. The backend decodes and processes the audio.
-4. The selected speech-recognition engine generates the transcription.
-5. The backend returns the result to the frontend.
-
-**Live microphone transcription**
-
-1. The browser captures microphone audio.
-2. AudioWorklet processes the audio into PCM chunks.
-3. The chunks are transmitted through a WebSocket connection.
-4. The backend processes speech segments using voice activity detection.
-5. Completed transcriptions are sent back to the frontend.
-
-## Running Locally
-
-### Requirements
+### Prerequisites
 
 - Python 3.12
-- VS Code or another code editor
-- Google Chrome or another supported Chromium-based browser for live microphone functionality
+- Git
+- A modern web browser
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
-```powershell
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+```bash
+git clone https://github.com/yokai-og/VocalAI.git
 cd VocalAI
 ```
 
-### 2. Create a virtual environment
+### 2. Set Up the Backend
 
-```powershell
-python -m venv .venv
-```
-
-Activate it:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-### 3. Install backend dependencies
-
-```powershell
-pip install -r backend/requirements.txt
-```
-
-### 4. Start the backend
-
-```powershell
+```bash
 cd backend
-uvicorn app:app --host 127.0.0.1 --port 8000
+python -m venv venv
 ```
 
-The backend API will be available at:
+Activate the virtual environment.
 
-- API: `http://127.0.0.1:8000`
-- API documentation: `http://127.0.0.1:8000/docs`
-- Health check: `http://127.0.0.1:8000/health`
-
-### 5. Start the frontend
-
-Open a second terminal from the project root:
+**Windows PowerShell:**
 
 ```powershell
-python -m http.server 5500 --directory frontend
+.\venv\Scripts\Activate.ps1
 ```
 
-Open the application at:
+Install dependencies:
 
-`http://127.0.0.1:5500`
+```bash
+pip install -r requirements.txt
+```
 
-The local frontend configuration automatically connects to the backend at `http://127.0.0.1:8000`.
+### 3. Configure Environment Variables
 
-## API Endpoints
+Create a `.env` file inside the `backend` directory using `.env.example` as a reference.
+
+Configure any required environment variables before starting the backend.
+
+### 4. Start the Backend
+
+```bash
+uvicorn app:app --reload --host 127.0.0.1 --port 8000
+```
+
+Backend URL:
+
+`http://127.0.0.1:8000`
+
+API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+### 5. Start the Frontend
+
+Open another terminal from the project root:
+
+```bash
+cd frontend
+python -m http.server 5500
+```
+
+Open the application:
+
+`http://localhost:5500`
+
+## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | API information |
 | GET | `/health` | Backend health status |
 | GET | `/docs` | Interactive API documentation |
-| POST | `/api/transcribe` | Upload and transcribe audio |
-| WebSocket | `/ws/stream` | Live microphone transcription |
+| POST | `/api/transcribe` | Audio transcription |
+| WebSocket | `/ws/stream` | Real-time audio transcription |
 
-## Deployment
+## 🚀 Deployment
 
-VocalAI uses separate frontend and backend deployments.
+VocalAI uses separate deployment platforms for its frontend and backend.
 
-### Backend — Render
+- **Frontend:** Deployed on Vercel.
+- **Backend:** Deployed on Render.
+- **Configuration:** The frontend API URL is configured in `frontend/config.js`.
+- **Backend deployment:** Configured through `render.yaml`.
 
-The backend can be deployed using the included `render.yaml` blueprint.
+## 🔒 License and Attribution
 
-- Runtime: Python
-- Framework: FastAPI
-- Server: Uvicorn
-- Health check: `/health`
+This project is distributed under the MIT License.
 
-### Frontend — Vercel
+Copyright (c) 2026 Darkstrike03
 
-The frontend is a static website and does not require a build step.
+VocalAI is based on the original [SPEECH repository](https://github.com/Darkstrike03/SPEECH). The original copyright and license notice are retained in accordance with the MIT License.
 
-- Framework: Other
-- Root directory: `frontend`
-- Build command: Not required
-- Output directory: `.`
+## 👨‍💻 Project
 
-After deployment, configure the frontend API URL and backend CORS settings with your actual deployment domains.
+**VocalAI** — AI-powered speech transcription application.
 
-## Project Information
+Repository: https://github.com/yokai-og/VocalAI
 
-**Project name:** VocalAI  
-**Category:** Artificial Intelligence / Speech Recognition  
-**Type:** Web Application
-
-### Credits and Attribution
-
-VocalAI is a modified and rebranded version of the original SPEECH project, adapted with permission from its original developer.
-
-Original repository: https://github.com/Darkstrike03/SPEECH
-
-Original license and any required attribution notices should be retained.
-
----
-
-**VocalAI — Turning Speech into Text.**
+Live Application: https://vocalai-one.vercel.app/
