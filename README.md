@@ -1,115 +1,189 @@
-# Speech to Text — Ink & Voice
+# VocalAI — AI-Powered Speech Transcription
 
-A small speech-to-text web app for the "Speech-to-Text Transcription" assignment: convert
-audio recordings (and live microphone speech) into text using Python speech-recognition
-libraries, wrapped in a light rice-paper and ink-painting interface.
+VocalAI is a web-based speech-to-text application that converts uploaded audio recordings and live microphone speech into text. It combines Python speech-recognition technologies with a modern, responsive interface.
 
-- **Live demo:** https://speechtotexteng.vercel.app
-- **API:** https://speech-to-text-api-9ovp.onrender.com (`/docs`, `/health`)
-- **Frontend:** static site (`frontend/`) deployed on Vercel
-- **Repo:** https://github.com/Darkstrike03/SPEECH
+The application supports Google Web Speech and locally hosted OpenAI Whisper through a FastAPI backend.
 
 ## Features
 
-- Upload `wav`, `mp3`, `m4a`, `ogg`, `flac`, or `webm` (up to 25 MB / 5 minutes).
-- Live microphone mode: near-live finals over WebSocket, one phrase per pause.
-- Engine choice in both modes:
-  - **Google Web Speech** via Python's `SpeechRecognition` (default; no API key).
-  - **Whisper** via `faster-whisper` tiny running on the server (offline fallback).
-- Timestamps, copy, download `.txt`, language selection, level meter, session timer.
-- Ink-painting UI: rice paper, grain, brush tabs, ensō mic, red seal, layered mountains.
+- **Audio transcription:** Upload WAV, MP3, M4A, OGG, FLAC, or WEBM files.
+- **Live transcription:** Transcribe microphone speech in near real time using WebSockets.
+- **Multiple transcription engines:**
+  - Google Web Speech through Python's `SpeechRecognition` library.
+  - OpenAI Whisper through `faster-whisper` running on the server.
+- **Automatic fallback:** The backend can fall back to Whisper when Google transcription fails.
+- **Transcription controls:** Copy text, download `.txt` files, and view timestamps.
+- **Live controls:** Language selection, audio-level meter, and session timer.
+- **Modern interface:** Dark navy theme with violet and cyan accents.
+
+## Technology Stack
+
+| Component | Technologies |
+|---|---|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, FastAPI |
+| Speech Recognition | SpeechRecognition, Google Web Speech |
+| AI Transcription | OpenAI Whisper, faster-whisper |
+| Audio Processing | PyAV, PCM AudioWorklet |
+| Communication | REST API, WebSockets |
+| Deployment | Render, Vercel |
 
 ## Architecture
 
+```text
+VocalAI/
+│
+├── frontend/
+│   ├── index.html
+│   ├── styles.css
+│   ├── app.js
+│   ├── config.js
+│   └── pcm-worklet.js
+│
+├── backend/
+│   ├── app.py
+│   ├── transcriber.py
+│   ├── streaming.py
+│   ├── connections.py
+│   ├── database.py
+│   ├── schema.py
+│   ├── cli.py
+│   ├── benchmark.py
+│   ├── prefetch_model.py
+│   └── requirements.txt
+│
+├── samples/
+├── README.md
+├── PROJECT_PHASES.md
+└── render.yaml
 ```
-frontend/ (HTML + CSS + vanilla JS, no build)
-  pcm-worklet.js   48 kHz mic -> 16 kHz mono int16, 100 ms chunks
-  app.js           tabs, upload flow, WebSocket client, results
 
-backend/ (FastAPI, Python 3.12)
-  app.py           POST /api/transcribe, WS /ws/stream, CORS, rate + concurrency limits
-  transcriber.py   PyAV decode, Google Web Speech, faster-whisper, engine fallback
-  streaming.py     energy VAD endpointer -> complete utterances with timestamps
-  cli.py           local file transcription
-  benchmark.py     HTTP latency/RTF measurement
-  ws_test_client.py replay an audio file into the live endpoint
-```
+### Audio Processing Workflow
 
-Upload path: multipart -> PyAV decode to 16 kHz mono -> Google (45 s chunks with 300 ms tail
-padding) or Whisper -> JSON. If Google fails, the server automatically falls back to Whisper and
-returns a warning.
+**Uploaded audio**
 
-Live path: AudioWorklet -> WebSocket -> VAD endpointer -> worker thread -> engine -> `final`
-message. Interim words are not emitted; each phrase appears after the speaker pauses.
+1. The user uploads an audio file through the frontend.
+2. The frontend sends it to the FastAPI backend.
+3. The backend decodes and processes the audio.
+4. The selected speech-recognition engine generates the transcription.
+5. The backend returns the result to the frontend.
 
-## Engines and why
+**Live microphone transcription**
 
-The brief asks for basic Python speech libraries. `SpeechRecognition` (Google Web Speech) is the
-default because it is keyless, network-bound, and fast even on free hosting. Whisper runs locally
-with `faster-whisper` tiny (int8) as the fallback and as the second UI engine.
+1. The browser captures microphone audio.
+2. AudioWorklet processes the audio into PCM chunks.
+3. The chunks are transmitted through a WebSocket connection.
+4. The backend processes speech segments using voice activity detection.
+5. Completed transcriptions are sent back to the frontend.
 
-On Render's free 0.1 CPU, local Whisper measured RTF 5.6–6.3 (about 45 s for 8 s of audio), so
-hosting Whisper live there is not practical. Google Web Speech measured RTF 0.28–0.33 for uploads
-and 0.6–1.4 s per live phrase. A hosted Whisper provider (Groq) was prototyped and then removed:
-unnecessary for the assignment and an extra key/deployment dependency.
+## Running Locally
 
-Note: Google's free endpoint can merge words across a short pause ("tool. The" -> "to all the")
-and can rate-limit cloud IPs. Switch to Whisper for exact words; the server falls back
-automatically on Google failures.
+### Requirements
 
-## Run locally
+- Python 3.12
+- VS Code or another code editor
+- Google Chrome or another supported Chromium-based browser for live microphone functionality
 
-Requires Python 3.12 (the bundled `.venv` is 3.12.7) and a Chromium-based browser for live mode.
+### 1. Clone the repository
 
 ```powershell
-# API
-.\.venv\Scripts\python.exe -m uvicorn app:app --host 127.0.0.1 --port 8000 --app-dir backend
-
-# Web (second terminal)
-.\.venv\Scripts\python.exe -m http.server 5500 --directory frontend
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd VocalAI
 ```
 
-Open http://127.0.0.1:5500. Local `config.js` automatically targets `http://127.0.0.1:8000`.
-
-Optional checks:
+### 2. Create a virtual environment
 
 ```powershell
-.\.venv\Scripts\python.exe backend\cli.py samples\speech-test.wav --engine google
-.\.venv\Scripts\python.exe backend\benchmark.py samples\speech-test.mp3 --engine google
-.\.venv\Scripts\python.exe backend\ws_test_client.py samples\speech-test.wav --realtime --engine google
+python -m venv .venv
 ```
 
-## API
+Activate it:
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/health` | status, default engine, model, limits |
-| `GET` | `/docs` | interactive OpenAPI docs |
-| `POST` | `/api/transcribe` | multipart `file`, `engine=google|whisper`, `language` |
-| `WS` | `/ws/stream` | live PCM streaming |
-
-WebSocket contract: send `{"type":"start","language":"en","engine":"google"}`, then raw
-little-endian int16 PCM (16 kHz mono), optional `ping`, and `stop`. The server replies with
-`ready`, `queued`, `vad`, `processing`, `final`, `empty`, `warning`, `error`, `pong`, and `done`.
-Audio is only sent after `ready`.
-
-Limits: 25 MB upload, 5 minutes of audio, 5-minute live sessions, one active live session with a
-five-client FIFO queue, and 30 uploads per 10 minutes globally.
-
-## Deploy
-
-Backend: Render blueprint (`render.yaml`) builds `backend/`, prefetches the Whisper tiny model,
-and serves `uvicorn` on `$PORT` with `/health`. No secrets are required.
-
-Frontend: deploy `frontend/` as a static site (Vercel, no build step). `config.js` already points
-non-local hosts at the Render API; the backend allows `https://*.vercel.app` origins.
-
-## Project layout
-
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
-backend/    FastAPI service and ASR pipeline
-frontend/   static UI (no bundler)
-samples/    local test audio (gitignored)
-PROJECT_PHASES.md   decisions, protocol, measurements, risks
-render.yaml         Render blueprint
+
+### 3. Install backend dependencies
+
+```powershell
+pip install -r backend/requirements.txt
 ```
+
+### 4. Start the backend
+
+```powershell
+cd backend
+uvicorn app:app --host 127.0.0.1 --port 8000
+```
+
+The backend API will be available at:
+
+- API: `http://127.0.0.1:8000`
+- API documentation: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/health`
+
+### 5. Start the frontend
+
+Open a second terminal from the project root:
+
+```powershell
+python -m http.server 5500 --directory frontend
+```
+
+Open the application at:
+
+`http://127.0.0.1:5500`
+
+The local frontend configuration automatically connects to the backend at `http://127.0.0.1:8000`.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | API information |
+| GET | `/health` | Backend health status |
+| GET | `/docs` | Interactive API documentation |
+| POST | `/api/transcribe` | Upload and transcribe audio |
+| WebSocket | `/ws/stream` | Live microphone transcription |
+
+## Deployment
+
+VocalAI uses separate frontend and backend deployments.
+
+### Backend — Render
+
+The backend can be deployed using the included `render.yaml` blueprint.
+
+- Runtime: Python
+- Framework: FastAPI
+- Server: Uvicorn
+- Health check: `/health`
+
+### Frontend — Vercel
+
+The frontend is a static website and does not require a build step.
+
+- Framework: Other
+- Root directory: `frontend`
+- Build command: Not required
+- Output directory: `.`
+
+After deployment, configure the frontend API URL and backend CORS settings with your actual deployment domains.
+
+## Project Information
+
+**Project name:** VocalAI  
+**Category:** Artificial Intelligence / Speech Recognition  
+**Type:** Web Application
+
+### Credits and Attribution
+
+VocalAI is a modified and rebranded version of the original SPEECH project, adapted with permission from its original developer.
+
+Original repository: https://github.com/Darkstrike03/SPEECH
+
+Original license and any required attribution notices should be retained.
+
+---
+
+**VocalAI — Turning Speech into Text.**

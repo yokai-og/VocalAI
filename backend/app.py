@@ -68,8 +68,8 @@ STATUS_BY_CODE = {
 }
 
 app = FastAPI(
-    title="Speech-to-Text API",
-    description="Upload audio or stream a microphone into Google Web Speech or on-server Whisper.",
+    title="VocalAI API",
+    description="API for audio transcription and live speech processing using Google Web Speech and on-server Whisper.",
     version="1.0.0",
 )
 
@@ -149,7 +149,7 @@ def _error(message: str, code: str, status_code: int | None = None) -> JSONRespo
 @app.get("/")
 def root() -> dict:
     return {
-        "name": "Speech-to-Text API",
+        "name": "VocalAI API",
         "docs": "/docs",
         "health": "/health",
         "upload": "POST /api/transcribe",

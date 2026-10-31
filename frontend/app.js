@@ -659,7 +659,7 @@
       if (!state.live.everReady) {
         showError(
           "Cannot reach the live API",
-          "The microphone stream never connected. An ad blocker or privacy extension can block the API; try Incognito or allow speech-to-text-api-9ovp.onrender.com."
+          "The microphone stream never connected. An ad blocker or privacy extension may be blocking the API. Try Incognito or check your browser permissions."
         );
         stopLive();
         return;
@@ -836,7 +836,7 @@
   }
 
   async function warmUp() {
-    setStatus("idle", "Checking the scriptorium…");
+    setStatus("idle", "Connecting to VocalAI...");
     const slow = setTimeout(() => setStatus("idle", "Waking server…"), 4000);
     try {
       const response = await fetch(`${API_BASE}/health`, { cache: "no-store" });

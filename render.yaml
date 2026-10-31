@@ -1,6 +1,6 @@
 ﻿services:
   - type: web
-    name: speech-to-text-api
+    name: vocalai-api
     runtime: python
     plan: free
     rootDir: backend
